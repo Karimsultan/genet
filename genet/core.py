@@ -1182,6 +1182,46 @@ class Network:
         logging.info('Deleting isolated nodes which have no edges.')
         self.remove_nodes(list(nx.isolates(self.graph)))
 
+    def retain_n_connected_subgraphs(self, n, mode):
+        """
+        Method to remove modes from link which do not belong to largest connected n components. Deletes links which
+        have no mode left after the process.
+        :param n: number of components to retain
+        :param mode: which mode to consider
+        :return: updates graph
+        """
+        def remove_mode(link_attribs):
+            if link_attribs['id'] in diff_links:
+                return set(link_attribs['modes']) - {mode}
+            else:
+                return link_attribs['modes']
+
+        def empty_modes(mode_attrib):
+            if not mode_attrib:
+                return True
+            return False
+
+        modal_subgraph = self.modal_subgraph(mode)
+        # calculate how many connected subgraphs there are
+        connected_components = network_validation.find_connected_subgraphs(modal_subgraph)
+        connected_components_nodes = []
+        for i in range(0, n):
+            connected_components_nodes += connected_components[i][0]
+        connected_subgraphs_to_extract = modal_subgraph.subgraph(connected_components_nodes).copy().edges.data('id')
+        diff_links = set([e[2] for e in modal_subgraph.edges.data('id')]) - set(
+            [e[2] for e in connected_subgraphs_to_extract])
+        logging.info(f'Extracting largest connected components resulted in mode: {mode} being deleted from '
+                     f'{len(diff_links)} edges')
+        self.apply_function_to_links(function=remove_mode, location='modes')
+
+        # remove links without modes
+        no_mode_links = graph_operations.extract_links_on_edge_attributes(
+            n,
+            {'modes': empty_modes},
+            mixed_dtypes=False
+        )
+        n.remove_links(no_mode_links)
+
     def read_matsim_network(self, path):
         self.graph, self.link_id_mapping, duplicated_nodes, duplicated_links = \
             matsim_reader.read_network(path, self.transformer)

@@ -1631,6 +1631,33 @@ def test_reads_osm_network_into_the_right_schema(full_fat_default_config_path):
         assert satisfied
 
 
+def test_retaining_n_connected_subgraphs_removes_car_from_one_way_edge_with_car_sink_node_at_the_end():
+    n = Network('epsg:27700')
+    n.add_link('0', 1, 2, attribs={'modes': ['walk'], 'length': 1})
+    n.add_link('1', 2, 3, attribs={'modes': ['walk', 'car'], 'length': 1})
+    n.add_link('2', 3, 2, attribs={'modes': ['walk', 'car'], 'length': 1})
+    n.add_link('3', 2, 1, attribs={'modes': ['walk', 'car'], 'length': 1})
+    n.retain_n_connected_subgraphs(1, 'car')
+    assert_semantically_equal(dict(n.links()),
+                              {'0': {'modes': ['walk'], 'length': 1, 'from': 1, 'to': 2, 'id': '0'},
+                               '1': {'modes': ['walk', 'car'], 'length': 1, 'from': 2, 'to': 3, 'id': '1'},
+                               '2': {'modes': ['walk', 'car'], 'length': 1, 'from': 3, 'to': 2, 'id': '2'},
+                               '3': {'modes': ['walk'], 'length': 1, 'from': 2, 'to': 1, 'id': '3'}})
+
+
+def test_retaining_n_connected_subgraphs_removes_link_with_resulting_empty_modes_attribute():
+    n = Network('epsg:27700')
+    n.add_link('0', 1, 2, attribs={'modes': ['walk'], 'length': 1})
+    n.add_link('1', 2, 3, attribs={'modes': ['walk', 'car'], 'length': 1})
+    n.add_link('2', 3, 2, attribs={'modes': ['walk', 'car'], 'length': 1})
+    n.add_link('3', 2, 1, attribs={'modes': ['car'], 'length': 1})
+    n.retain_n_connected_subgraphs(1, 'car')
+    assert_semantically_equal(dict(n.links()),
+                              {'0': {'modes': ['walk'], 'length': 1, 'from': 1, 'to': 2, 'id': '0'},
+                               '1': {'modes': ['walk', 'car'], 'length': 1, 'from': 2, 'to': 3, 'id': '1'},
+                               '2': {'modes': ['walk', 'car'], 'length': 1, 'from': 3, 'to': 2, 'id': '2'}})
+
+
 def test_read_matsim_network_delegates_to_matsim_reader_read_network(mocker):
     mocker.patch.object(matsim_reader, 'read_network', return_value=(nx.MultiDiGraph(), 2, {}, {}))
 

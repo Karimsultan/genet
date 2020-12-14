@@ -1216,11 +1216,11 @@ class Network:
 
         # remove links without modes
         no_mode_links = graph_operations.extract_links_on_edge_attributes(
-            n,
+            self,
             {'modes': empty_modes},
             mixed_dtypes=False
         )
-        n.remove_links(no_mode_links)
+        self.remove_links(no_mode_links)
 
     def read_matsim_network(self, path):
         self.graph, self.link_id_mapping, duplicated_nodes, duplicated_links = \

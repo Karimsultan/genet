@@ -49,7 +49,7 @@ if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s - %(message)s', level=logging.WARNING)
 
     n = gn.Network(projection)
-    logging.info('Reading in network at {}'.format(network))
+    logging.info('Reading in OSM data at {}'.format(network))
     n.read_matsim_network(network)
     if schedule:
         logging.info('Reading in schedule at {}'.format(schedule))

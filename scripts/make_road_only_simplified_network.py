@@ -1,6 +1,9 @@
 import argparse
 import genet as gn
 import logging
+import time
+import os
+import json
 
 
 if __name__ == '__main__':
@@ -48,9 +51,33 @@ if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s - %(message)s', level=logging.WARNING)
 
     n = gn.Network(projection)
-    logging.info('Reading in network at {}'.format(osm))
+    logging.info(f'Reading in OSM data at {osm}')
+    start_network = time.time()
     n.read_osm(osm, config, num_processes=processes)
-    # TODO uncomment when this functionality makes it to master
-    # for mode in ['walk', 'car', 'bike']:
-    #     n.retain_n_connected_subgraphs(n=connected_components, mode=mode)
+    logging.info(f'Extracting {connected_components} strongly connected components')
+    for mode in ['walk', 'car', 'bike']:
+        n.retain_n_connected_subgraphs(n=connected_components, mode=mode)
+
+    logging.info('Simplifying the Network.')
+    start_simplify = time.time()
+    n.simplify(no_processes=processes)
+    end_simplify = time.time()
+
+    logging.info(
+        f'Simplification resulted in {len(n.link_simplification_map)} links being simplified.')
+    with open(os.path.join(output_dir, 'link_simp_map.json'), 'w', encoding='utf-8') as f:
+        json.dump(n.link_simplification_map, f, ensure_ascii=False, indent=4)
+
+    end_network = time.time()
+    n.write_to_matsim(output_dir)
+
+    logging.info('Generating validation report')
+    report = n.generate_validation_report()
+    logging.info(f'Graph validation: {report["graph"]["graph_connectivity"]}')
+
+    n.generate_standard_outputs(os.path.join(output_dir, 'standard_outputs'))
+
+    logging.info(f'It took {round((end_simplify - start_simplify)/60, 3)} min to simplify the network.')
+    logging.info(f'It took {round((end_network - start_network)/60, 3)} min to generate the network.')
+
     n.write_to_matsim(output_dir)

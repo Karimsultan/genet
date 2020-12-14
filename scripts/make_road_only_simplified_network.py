@@ -60,7 +60,7 @@ if __name__ == '__main__':
 
     logging.info('Simplifying the Network.')
     start_simplify = time.time()
-    n.simplify(no_processes=processes)
+    n.simplify(no_processes=1)
     end_simplify = time.time()
 
     logging.info(

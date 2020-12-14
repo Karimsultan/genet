@@ -332,11 +332,11 @@ def correct_services_from_test_pt2matsim_schedule():
 
 @pytest.fixture()
 def full_fat_default_config_path():
-    return os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "configs", "default_config.yml"))
+    return os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "configs", "full_fat_config.yml"))
 
 @pytest.fixture()
 def full_fat_default_config():
-    return osm_reader.Config(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "configs", "default_config.yml")))
+    return osm_reader.Config(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "configs", "full_fat_config.yml")))
 
 @pytest.fixture()
 def slim_default_config_path():

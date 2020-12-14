@@ -26,7 +26,7 @@ MODES:
     # tags that are not understood by puma will be logged and can be reviewed before proceeding with building the network.
     # if a tag is not listed here, it will not be read into the network. This is where you should define how dense
     # you want your network to be. If any of these tags don't have values defined for them in
-    # src/outputs_handling/matsim_xml_values.py, it will default to
+    # src/outputs_handling/matsim_xml_values.py, it will default to DEFAULT_OSM_TAG_VALUE
     highway:
       motorway:
         - car
@@ -60,18 +60,58 @@ MODES:
         - car
         - walk
         - bike
+      minor:
+        - car
+        - walk
+        - bike
       unclassified:
         - car
         - walk
         - bike
+      track:
+        - car
+        - walk
+        - bike
+      residential:
+        - car
+        - walk
+        - bike
+      service:
+        - car
+        - walk
+        - bike
+      living_street:
+        - car
+        - walk
+        - bike
+      pedestrian:
+        - walk
+      footway:
+        - walk
+      steps:
+        - walk
+      bridleway:
+        - walk
+      corridor:
+        - walk
+      path:
+        - walk
+      crossing:
+        - walk
+      escalator:
+        - walk
+      stepping_stones:
+        - walk
+      cycleway:
+        - bike
+      raceway:
+        - car
+      access:
+        - car
     railway:
       - rail
 
   DEFAULT_OSM_TAG_VALUE:
-  # puma will first look at OSM tags to infer the matsim values the link should have. For the types and values head over to 
-  # outputs_handling/matsim_xml_values.py. Not all links will have an OSM tag because they could have come from GFTS that is 
-  # too far to snap to the OSM network. In that case, puma will look at the modes on that link and default to the matsim 
-  # values below. Make sure you include modes that exist in GTFS, i.e. take a look at values in MODES:MODE_SUBGROUPS:
     car: secondary
     bus: secondary
     rail: railway

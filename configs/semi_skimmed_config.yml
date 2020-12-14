@@ -68,15 +68,7 @@ MODES:
         - car
         - walk
         - bike
-      track:
-        - car
-        - walk
-        - bike
       residential:
-        - car
-        - walk
-        - bike
-      service:
         - car
         - walk
         - bike
@@ -84,37 +76,11 @@ MODES:
         - car
         - walk
         - bike
-      pedestrian:
-        - walk
-      footway:
-        - walk
-      steps:
-        - walk
-      bridleway:
-        - walk
-      corridor:
-        - walk
-      path:
-        - walk
-      crossing:
-        - walk
-      escalator:
-        - walk
-      stepping_stones:
-        - walk
-      cycleway:
-        - bike
-      raceway:
-        - car
-      access:
-        - car
-    railway:
-      - rail
 
   DEFAULT_OSM_TAG_VALUE:
     car: secondary
     bus: secondary
     rail: railway
-    subway,metro: railway
+    subway: railway
     bike: living_street
     walk: pedestrian

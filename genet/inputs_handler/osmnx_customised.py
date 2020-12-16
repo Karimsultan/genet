@@ -6,7 +6,7 @@ import genet.inputs_handler.osm_reader as osm_reader
 # rip and monkey patch of a few functions from osmnx.core to customise the tags being saved to the graph
 
 
-def parse_osm_nodes_paths(osm_data, config):
+def parse_osm_nodes_paths(element, config):
     """
     function from osmnx, adding our own spin on this - need extra tags
 
@@ -25,17 +25,16 @@ def parse_osm_nodes_paths(osm_data, config):
 
     nodes = {}
     paths = {}
-    for element in osm_data['elements']:
-        if element['type'] == 'node':
-            key = element['id']
-            nodes[key] = get_node(element, config)
-        elif element['type'] == 'way':  # osm calls network paths 'ways'
-            key = element['id']
-            path = get_path(element, config)
-            if path['modes']:
-                # only proceed with edges that have found a mode (that's why it's important to define them in
-                # MODE_INDICATORS in the config
-                paths[key] = path
+    if element['type'] == 'node':
+        key = element['id']
+        nodes[key] = get_node(element, config)
+    elif element['type'] == 'way':  # osm calls network paths 'ways'
+        key = element['id']
+        path = get_path(element, config)
+        if path['modes']:
+            # only proceed with edges that have found a mode (that's why it's important to define them in
+            # MODE_INDICATORS in the config
+            paths[key] = path
 
     return nodes, paths
 

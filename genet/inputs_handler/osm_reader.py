@@ -79,28 +79,23 @@ def find_matsim_link_values(edge_data, config):
 
 def generate_osm_graph_edges_from_file(osm_file, config, num_processes):
     logging.info("Building OSM graph from file {}".format(osm_file))
-    response_jsons = file_converter(osm_file)
-    nodes, edges = create_s2_indexed_osm_graph(response_jsons, config, num_processes, bidirectional=False)
+    nodes, edges = create_osm_graph(osm_file, config, num_processes, bidirectional=False)
     logging.info('Created OSM edges')
     return nodes, edges
 
 
-def create_s2_indexed_osm_graph(response_jsons, config, num_processes, bidirectional):
-    logging.info('Creating networkx graph from OSM data')
-
-    elements = []
-    for response_json in response_jsons:
-        elements.extend(response_json['elements'])
-
-    logging.info('OSM: Extract Nodes and Paths from OSM data')
+def create_osm_graph(osm_file, config, num_processes, bidirectional):
+    logging.info('OSM: Extracting Nodes and Paths from OSM data')
     nodes = {}
     paths = {}
-    for osm_data in response_jsons:
-        nodes_temp, paths_temp = osmnx_customised.parse_osm_nodes_paths(osm_data, config)
-        for key, value in nodes_temp.items():
-            nodes[key] = value
-        for key, value in paths_temp.items():
-            paths[key] = value
+    for osm_data in osmread.parse_file(osm_file):
+        osm_data = entity_converter(osm_data)
+        if osm_data:
+            nodes_temp, paths_temp = osmnx_customised.parse_osm_nodes_paths(osm_data, config)
+            for key, value in nodes_temp.items():
+                nodes[key] = value
+            for key, value in paths_temp.items():
+                paths[key] = value
 
     logging.info('OSM: Add each OSM way (aka, path) to the OSM graph')
     edges = parallel.multiprocess_wrap(
@@ -209,23 +204,17 @@ def read_relation(entity):
     return json_data
 
 
-def file_converter(osm_file):
-    elements = []
+def entity_converter(entity):
+    json_data = {}
 
-    # Extract the nodes and the ways
-    for entity in osmread.parse_file(osm_file):
-        json_data = {}
+    if isinstance(entity, osmread.Node):
+        json_data = read_node(entity)
 
-        if isinstance(entity, osmread.Node):
-            json_data = read_node(entity)
+    elif isinstance(entity, osmread.Way):
+        json_data = read_way(entity)
 
-        elif isinstance(entity, osmread.Way):
-            json_data = read_way(entity)
-
-        elif isinstance(entity, osmread.Relation):
-            json_data = read_relation(entity)
-
-        elements.append(json_data)
+    elif isinstance(entity, osmread.Relation):
+        json_data = read_relation(entity)
 
     # response_jsons
-    return [{'elements': elements}]
+    return json_data

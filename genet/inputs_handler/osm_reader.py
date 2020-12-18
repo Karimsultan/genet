@@ -79,16 +79,20 @@ def find_matsim_link_values(edge_data, config):
 
 def generate_osm_graph_edges_from_file(osm_file, config, num_processes):
     logging.info("Building OSM graph from file {}".format(osm_file))
-    nodes, edges = create_osm_graph(osm_file, config, num_processes, bidirectional=False)
+    nodes, edges = create_osm_graph_components(osm_file, config, num_processes, bidirectional=False)
     logging.info('Created OSM edges')
     return nodes, edges
 
 
-def create_osm_graph(osm_file, config, num_processes, bidirectional):
-    logging.info('OSM: Extracting Nodes and Paths from OSM data')
+def make_paths_and_nodes_from_osm_parse_entities(entities, config):
+    """
+    :param entities: osmread.parse_file('some/osm/file/') (or part thereof)
+    :return:
+    """
     nodes = {}
     paths = {}
-    for osm_data in osmread.parse_file(osm_file):
+
+    for osm_data in entities:
         osm_data = entity_converter(osm_data)
         if osm_data:
             nodes_temp, paths_temp = osmnx_customised.parse_osm_nodes_paths(osm_data, config)
@@ -96,8 +100,22 @@ def create_osm_graph(osm_file, config, num_processes, bidirectional):
                 nodes[key] = value
             for key, value in paths_temp.items():
                 paths[key] = value
+    return nodes, paths
 
-    logging.info('OSM: Add each OSM way (aka, path) to the OSM graph')
+
+def create_osm_graph_components(osm_file, config, num_processes, bidirectional):
+    logging.info('OSM: Extracting Nodes and Paths from OSM data')
+
+    nodes, paths = parallel.multiprocess_wrap(
+        data=list(osmread.parse_file(osm_file)),
+        split=parallel.split_list,
+        apply=make_paths_and_nodes_from_osm_parse_entities,
+        combine=parallel.combine_tuple_dicts,
+        processes=num_processes,
+        config=config
+    )
+
+    logging.info('OSM: Create edges from OSM Paths')
     edges = parallel.multiprocess_wrap(
         data=paths,
         split=parallel.split_dict,

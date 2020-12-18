@@ -29,30 +29,44 @@ def test_combine_list():
 
 
 def test_split_dict_returns_list_with_one_dict_with_one_process():
-    dict_to_be_partitioned = dict(zip(range(50), [str(2*i) for i in range(50)]))
+    dict_to_be_partitioned = dict(zip(range(50), [str(2 * i) for i in range(50)]))
     patitioned_dict = parallel.split_dict(dict_to_be_partitioned, processes=1)
 
     assert patitioned_dict == [dict_to_be_partitioned]
 
 
 def test_split_dict_returns_correctly_partitioned_dicts():
-    dict_to_be_partitioned = dict(zip(range(10), [str(2*i) for i in range(10)]))
+    dict_to_be_partitioned = dict(zip(range(10), [str(2 * i) for i in range(10)]))
     patitioned_dict = parallel.split_dict(dict_to_be_partitioned, processes=3)
 
-    assert patitioned_dict == [{0:'0', 1:'2', 2:'4', 3:'6'}, {4:'8', 5:'10', 6:'12', 7:'14'}, {8:'16', 9:'18'}]
+    assert patitioned_dict == [{0: '0', 1: '2', 2: '4', 3: '6'}, {4: '8', 5: '10', 6: '12', 7: '14'},
+                               {8: '16', 9: '18'}]
 
 
 def test_combine_dict():
-    combined_list = parallel.combine_dict([{0:'0', 1:'2', 2:'4'}, {3:'6', 4:'8', 5:'10'}, {6:'12', 7:'14', 8:'16'}, {9:'18'}])
-    assert_semantically_equal(combined_list, dict(zip(range(10), [str(2*i) for i in range(10)])))
+    combined_list = parallel.combine_dict(
+        [{0: '0', 1: '2', 2: '4'}, {3: '6', 4: '8', 5: '10'}, {6: '12', 7: '14', 8: '16'}, {9: '18'}])
+    assert_semantically_equal(combined_list, dict(zip(range(10), [str(2 * i) for i in range(10)])))
+
+
+def test_combine_tuple_dicts():
+    combined_list = parallel.combine_tuple_dicts(
+        [({1: 3}, {'1': 4}), ({2: 'f'}, {'2': 5}), ({3: 'hey'}, {'3': 'boo'})])
+    assert_semantically_equal(combined_list, ({1: 3, 2: 'f', 3: 'hey'}, {'1': 4, '2': 5, '3': 'boo'}))
+
+
+def test_combine_tuple_dicts_when_tuples_vary_in_length_eww():
+    combined_list = parallel.combine_tuple_dicts(
+        [({1: 3}, {'1': 4}), ({2: 'f'}, {'2': 5}, {'boo': 'yaa'}), ({3: 'hey'}, {'3': 'boo'})])
+    assert_semantically_equal(combined_list, ({1: 3, 2: 'f', 3: 'hey'}, {'1': 4, '2': 5, '3': 'boo'}, {'boo':'yaa'}))
 
 
 def dict_to_list_function(dictionary, arg_1=1):
-    return [i*arg_1 for i in list(dictionary.keys())]
+    return [i * arg_1 for i in list(dictionary.keys())]
 
 
 def test_multiprocess_wrap_function_processing_dict_data():
-    input = dict(zip(range(200), ['a']*200))
+    input = dict(zip(range(200), ['a'] * 200))
 
     output = parallel.multiprocess_wrap(data=input, split=parallel.split_dict, apply=dict_to_list_function,
                                         combine=parallel.combine_list, processes=1)
@@ -60,7 +74,7 @@ def test_multiprocess_wrap_function_processing_dict_data():
 
 
 def test_multiprocess_wrap_function_processing_dict_data_with_kwargs():
-    input = dict(zip(range(200), ['a']*200))
+    input = dict(zip(range(200), ['a'] * 200))
 
     output = parallel.multiprocess_wrap(data=input, split=parallel.split_dict, apply=dict_to_list_function,
                                         combine=parallel.combine_list, processes=1, arg_1=2)
@@ -68,7 +82,7 @@ def test_multiprocess_wrap_function_processing_dict_data_with_kwargs():
 
 
 def test_multiprocess_wrapping_with_processes_param():
-    input = dict(zip(range(200), ['a']*200))
+    input = dict(zip(range(200), ['a'] * 200))
 
     output = parallel.multiprocess_wrap(data=input, split=parallel.split_dict, apply=dict_to_list_function,
                                         combine=parallel.combine_list, processes=2)
@@ -76,12 +90,12 @@ def test_multiprocess_wrapping_with_processes_param():
 
 
 def custom_simple_split_method(l):
-    return [{i:v} for i, v in l.items()]
+    return [{i: v} for i, v in l.items()]
 
 
 def test_multiprocess_wrapping_with_custom_simple_split_method():
     # i.e. doesnt rely on number of processes
-    input = dict(zip(range(10), ['a']*10))
+    input = dict(zip(range(10), ['a'] * 10))
 
     output = parallel.multiprocess_wrap(data=input, split=custom_simple_split_method, apply=dict_to_list_function,
                                         combine=parallel.combine_list, processes=2)

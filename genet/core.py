@@ -1192,20 +1192,24 @@ class Network:
         nodes, edges = osm_reader.generate_osm_graph_edges_from_file(
             osm_file_path, config, num_processes)
 
+        logging.info('Generating Graph nodes')
         nodes_and_attributes = parallel.multiprocess_wrap(
             data=nodes,
             split=parallel.split_dict,
             apply=osm_reader.generate_graph_nodes,
+            num_processes=num_processes,
             combine=parallel.combine_dict,
             epsg=self.epsg
         )
         reindexing_dict, nodes_and_attributes = self.add_nodes(nodes_and_attributes)
 
+        logging.info('Generating Graph edges')
         edges_attributes = parallel.multiprocess_wrap(
             data=edges,
             split=parallel.split_list,
             apply=osm_reader.generate_graph_edges,
             combine=parallel.combine_list,
+            num_processes=num_processes,
             reindexing_dict=reindexing_dict,
             nodes_and_attributes=nodes_and_attributes,
             config_path=osm_read_config

@@ -65,6 +65,27 @@ def combine_dict(list_dict):
     return return_dict
 
 
+def combine_tuple_dicts(list_tup):
+    """
+    Combine type function. Combines list of tuples, which have dict elements into a tuple with dict elements.
+    Assumes keys don't clash.
+    :param list_tup: list of tuples where tuple with dict entries
+    :return: tuple
+    """
+    results = {}
+    top_i = 0
+    for tup in list_tup:
+        length = len(tup)
+        if len(results) < length:
+            top_i = length
+            for i in range(length):
+                if i not in results:
+                    results[i] = {}
+        for i in range(length):
+            results[i] = {**results[i], **tup[i]}
+    return tuple([results[i] for i in range(top_i)])
+
+
 def multiprocess_wrap(data, split, apply, combine, processes=1, **kwargs):
     """
     Split up data into batches using `split` function and process in parallel using `apply(data, kwargs)` function,

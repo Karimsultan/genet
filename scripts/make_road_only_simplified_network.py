@@ -58,6 +58,8 @@ if __name__ == '__main__':
     for mode in ['walk', 'car', 'bike']:
         n.retain_n_connected_subgraphs(n=connected_components, mode=mode)
 
+    n.write_to_matsim(os.path.join(output_dir, 'pre_simplify'))
+
     logging.info('Simplifying the Network.')
     start_simplify = time.time()
     n.simplify(no_processes=1)

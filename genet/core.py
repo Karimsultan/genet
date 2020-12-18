@@ -1197,7 +1197,7 @@ class Network:
             data=nodes,
             split=parallel.split_dict,
             apply=osm_reader.generate_graph_nodes,
-            num_processes=num_processes,
+            processes=num_processes,
             combine=parallel.combine_dict,
             epsg=self.epsg
         )
@@ -1209,7 +1209,7 @@ class Network:
             split=parallel.split_list,
             apply=osm_reader.generate_graph_edges,
             combine=parallel.combine_list,
-            num_processes=num_processes,
+            processes=num_processes,
             reindexing_dict=reindexing_dict,
             nodes_and_attributes=nodes_and_attributes,
             config_path=osm_read_config

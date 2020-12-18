@@ -65,7 +65,7 @@ inspect or change it and save it out to file.
     
 #### Installation  
 
-Create and activate virtual environment
+Create and activate a virtual environment
 
     virtualenv -p python3.7 venv
     source venv/bin/activate

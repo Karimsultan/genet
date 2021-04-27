@@ -6,6 +6,13 @@ class ScheduleElementGraphSchemaError(Exception):
     pass
 
 
+class NetworkSchemaError(Exception):
+    """
+    Raised when the Network or any of its' elements is missing data or is not arranged correctly
+    """
+    pass
+
+
 class RouteInitialisationError(Exception):
     """
     Raised when a genet.Route cannot be instantiated
@@ -58,5 +65,12 @@ class UndefinedCoordinateSystemError(Exception):
 class StopIndexError(Exception):
     """
     Raised in case of Stop indexing inconsistency
+    """
+    pass
+
+
+class InconsistentVehicleModeError(Exception):
+    """
+    Raised when vehicles are shared between Routes with different modes
     """
     pass

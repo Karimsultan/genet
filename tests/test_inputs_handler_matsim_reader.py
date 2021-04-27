@@ -1,6 +1,6 @@
 from pyproj import Proj, Transformer
 from shapely.geometry import LineString
-from genet.inputs_handler import matsim_reader
+from genet.inputs_handler import matsim_reader, read
 from tests.fixtures import *
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
@@ -18,8 +18,12 @@ pt2matsim_network_with_geometry_file = os.path.abspath(
     os.path.join(os.path.dirname(__file__), "test_data", "matsim", "network_with_geometry.xml"))
 pt2matsim_network_with_singular_geometry_file = os.path.abspath(
     os.path.join(os.path.dirname(__file__), "test_data", "matsim", "network_with_singular_geometry.xml"))
+pt2matsim_NZ_network = os.path.abspath(
+    os.path.join(os.path.dirname(__file__), "test_data", "matsim", "NZ_network.xml"))
 pt2matsim_schedule_file = os.path.abspath(
     os.path.join(os.path.dirname(__file__), "test_data", "matsim", "schedule.xml"))
+pt2matsim_vehicles_file = os.path.abspath(
+    os.path.join(os.path.dirname(__file__), "test_data", "matsim", "vehicles.xml"))
 
 
 def test_read_network_builds_graph_with_correct_data_on_nodes_and_edges():
@@ -40,7 +44,7 @@ def test_read_network_builds_graph_with_correct_data_on_nodes_and_edges():
             'osm:way:name': {'name': 'osm:way:name', 'class': 'java.lang.String', 'text': 'Brunswick Place'}
         }}}
 
-    transformer = Transformer.from_proj(Proj('epsg:27700'), Proj('epsg:4326'))
+    transformer = Transformer.from_proj(Proj('epsg:27700'), Proj('epsg:4326'), always_xy=True)
 
     g, link_id_mapping, duplicated_nodes, duplicated_link_ids = matsim_reader.read_network(pt2matsim_network_test_file,
                                                                                            transformer)
@@ -57,6 +61,21 @@ def test_read_network_builds_graph_with_correct_data_on_nodes_and_edges():
         assert_semantically_equal(data, correct_edges[edge])
 
     assert_semantically_equal(duplicated_link_ids, {})
+
+
+def test_reading_NZ_network():
+    n = read.read_matsim(path_to_network=pt2matsim_NZ_network, epsg='epsg:2193')
+    assert_semantically_equal(dict(n.nodes()), {
+        '7872447671905026061': {'id': '7872447671905026061', 'x': 1789300.631705982, 'y': 5494320.626099871,
+                                'lon': 175.23998223484716, 'lat': -40.68028521526985, 's2_id': 7872447671905026061},
+        '7858001326813216825': {'id': '7858001326813216825', 'x': 1756643.5667029365, 'y': 5937269.480530882,
+                                'lon': 174.75350860744126, 'lat': -36.697337065329855, 's2_id': 7858001326813216825}})
+    assert_semantically_equal(dict(n.links()), {
+        '1': {'id': '1', 'from': '7858001326813216825', 'to': '7872447671905026061', 'freespeed': 4.166666666666667,
+              'capacity': 600.0, 'permlanes': 1.0, 'oneway': '1', 'modes': {'car', 'walk'},
+              's2_from': 7858001326813216825, 's2_to': 7872447671905026061, 'attributes': {
+                'osm:way:access': {'name': 'osm:way:access', 'class': 'java.lang.String', 'text': 'permissive'}},
+              'length': 52.765151087870265}})
 
 
 def test_read_network_builds_graph_with_multiple_edges_with_correct_data_on_nodes_and_edges():
@@ -87,14 +106,15 @@ def test_read_network_builds_graph_with_multiple_edges_with_correct_data_on_node
                 'osm:way:id': {'name': 'osm:way:id', 'class': 'java.lang.Long', 'text': '26997928'},
                 'osm:way:name': {'name': 'osm:way:name', 'class': 'java.lang.String', 'text': 'Brunswick Place'},
                 'osm:way:oneway': {'name': 'osm:way:oneway', 'class': 'java.lang.String', 'text': 'yes'},
-                'osm:relation:route': {'class': 'java.lang.String', 'name': 'osm:relation:route', 'text': {'bus', 'bicycle'}}
+                'osm:relation:route': {'class': 'java.lang.String', 'name': 'osm:relation:route',
+                                       'text': {'bus', 'bicycle'}}
             }
         }}}
 
     correct_link_id_map = {'1': {'from': '25508485', 'to': '21667818', 'multi_edge_idx': 0},
                            '2': {'from': '25508485', 'to': '21667818', 'multi_edge_idx': 1}}
 
-    transformer = Transformer.from_proj(Proj('epsg:27700'), Proj('epsg:4326'))
+    transformer = Transformer.from_proj(Proj('epsg:27700'), Proj('epsg:4326'), always_xy=True)
 
     g, link_id_mapping, duplicated_nodes, duplicated_link_ids = matsim_reader.read_network(
         pt2matsim_network_multiple_edges_test_file, transformer)
@@ -143,14 +163,15 @@ def test_read_network_builds_graph_with_unique_links_given_matsim_network_with_c
                 'osm:way:id': {'name': 'osm:way:id', 'class': 'java.lang.Long', 'text': '26997928'},
                 'osm:way:name': {'name': 'osm:way:name', 'class': 'java.lang.String', 'text': 'Brunswick Place'},
                 'osm:way:oneway': {'name': 'osm:way:oneway', 'class': 'java.lang.String', 'text': 'yes'},
-                'osm:relation:route': {'class': 'java.lang.String', 'name': 'osm:relation:route', 'text': {'bus', 'bicycle'}}
+                'osm:relation:route': {'class': 'java.lang.String', 'name': 'osm:relation:route',
+                                       'text': {'bus', 'bicycle'}}
             }
         }}}
 
     correct_link_id_map = {'1': {'from': '25508485', 'to': '21667818', 'multi_edge_idx': 0},
                            '1_1': {'from': '25508485', 'to': '21667818', 'multi_edge_idx': 1}}
 
-    transformer = Transformer.from_proj(Proj('epsg:27700'), Proj('epsg:4326'))
+    transformer = Transformer.from_proj(Proj('epsg:27700'), Proj('epsg:4326'), always_xy=True)
 
     g, link_id_mapping, duplicated_nodes, duplicated_link_ids = matsim_reader.read_network(
         pt2matsim_network_clashing_link_ids_test_file, transformer)
@@ -193,7 +214,7 @@ def test_read_network_rejects_non_unique_nodes():
 
     correct_link_id_map = {'1': {'from': '25508485', 'to': '21667818', 'multi_edge_idx': 0}}
 
-    transformer = Transformer.from_proj(Proj('epsg:27700'), Proj('epsg:4326'))
+    transformer = Transformer.from_proj(Proj('epsg:27700'), Proj('epsg:4326'), always_xy=True)
 
     g, link_id_mapping, duplicated_nodes, duplicated_link_ids = matsim_reader.read_network(
         pt2matsim_network_clashing_node_ids_test_file, transformer)
@@ -219,8 +240,7 @@ def test_read_network_rejects_non_unique_nodes():
 
 
 def test_reading_matsim_output_network():
-    n = Network('epsg:27700')
-    n.read_matsim_network(matsim_output_network)
+    n = read.read_matsim(path_to_network=matsim_output_network, epsg='epsg:27700')
 
     correct_nodes = {
         '21667818': {'id': '21667818', 's2_id': 5221390302696205321, 'x': 528504.1342843144, 'y': 182155.7435136598,
@@ -268,9 +288,7 @@ def test_reading_network_with_geometry_attributes():
                 'osm:way:name': {'name': 'osm:way:name', 'class': 'java.lang.String', 'text': 'Brunswick Place'}
             }}
     }
-
-    n = Network('epsg:27700')
-    n.read_matsim_network(pt2matsim_network_with_geometry_file)
+    n = read.read_matsim(path_to_network=pt2matsim_network_with_geometry_file, epsg='epsg:27700')
 
     assert_semantically_equal(dict(n.links()), correct_links)
 
@@ -292,9 +310,7 @@ def test_reading_network_with_singular_geometry_attribute_cleans_up_empty_attrib
             'modes': {'car'}
         }
     }
-
-    n = Network('epsg:27700')
-    n.read_matsim_network(pt2matsim_network_with_singular_geometry_file)
+    n = read.read_matsim(path_to_network=pt2matsim_network_with_singular_geometry_file, epsg='epsg:27700')
 
     assert_semantically_equal(dict(n.links()), correct_links)
 
@@ -308,3 +324,17 @@ def test_read_schedule_reads_the_data_correctly(correct_services_from_test_pt2ma
 
     assert correct_services_from_test_pt2matsim_schedule == services
     assert_semantically_equal(minimalTransferTimes, correct_minimalTransferTimes)
+
+
+def test_reading_pt2matsim_vehicles():
+    vehicles, vehicle_types = matsim_reader.read_vehicles(pt2matsim_vehicles_file)
+
+    assert_semantically_equal(vehicles, {'veh_0_bus': {'type': 'bus'}})
+    assert_semantically_equal(vehicle_types, {
+        'bus': {'capacity': {'seats': {'persons': '71'}, 'standingRoom': {'persons': '1'}},
+                'length': {'meter': '18.0'},
+                'width': {'meter': '2.5'},
+                'accessTime': {'secondsPerPerson': '0.5'},
+                'egressTime': {'secondsPerPerson': '0.5'},
+                'doorOperation': {'mode': 'serial'},
+                'passengerCarEquivalents': {'pce': '2.8'}}})

@@ -16,7 +16,9 @@ def route():
         route_short_name='name',
         mode='bus',
         stops=[a, b, c, d],
-        trips={'1': '10:00:00', '2': '20:00:00'},
+        trips = {'trip_id': ['1', '2'],
+                 'trip_departure_time': ['10:00:00', '20:00:00'],
+                 'vehicle_id': ['veh_1_bus', 'veh_2_bus']},
         arrival_offsets=['00:00:00', '00:03:00', '00:07:00', '00:13:00'],
         departure_offsets=['00:00:00', '00:05:00', '00:09:00', '00:15:00'],
         route=['1', '2', '3', '4'], id='1')
@@ -30,7 +32,9 @@ def strongly_connected_route():
         stops=[Stop(id='1', x=4, y=2, epsg='epsg:27700'), Stop(id='2', x=1, y=2, epsg='epsg:27700'),
                Stop(id='3', x=3, y=3, epsg='epsg:27700'), Stop(id='4', x=7, y=5, epsg='epsg:27700'),
                Stop(id='1', x=4, y=2, epsg='epsg:27700')],
-        trips={'1': '1', '2': '2'},
+        trips = {'trip_id': ['1', '2'],
+                 'trip_departure_time': ['10:00:00', '20:00:00'],
+                 'vehicle_id': ['veh_3_bus', 'veh_4_bus']},
         arrival_offsets=['00:00:00', '00:03:00', '00:07:00', '00:13:00', '00:17:00'],
         departure_offsets=['00:00:00', '00:05:00', '00:09:00', '00:15:00', '00:18:00'])
 
@@ -42,7 +46,9 @@ def self_looping_route():
         mode='bus',
         stops=[Stop(id='1', x=4, y=2, epsg='epsg:27700'), Stop(id='1', x=4, y=2, epsg='epsg:27700'),
                Stop(id='3', x=3, y=3, epsg='epsg:27700'), Stop(id='4', x=7, y=5, epsg='epsg:27700')],
-        trips={'1': '1', '2': '2'},
+        trips = {'trip_id': ['1', '2'],
+                 'trip_departure_time': ['10:00:00', '20:00:00'],
+                 'vehicle_id': ['veh_3_bus', 'veh_4_bus']},
         arrival_offsets=['00:00:00', '00:03:00', '00:07:00', '00:13:00'],
         departure_offsets=['00:00:00', '00:05:00', '00:09:00', '00:15:00'])
 
@@ -50,25 +56,26 @@ def self_looping_route():
 def test_initiating_route(route):
     r = route
     assert_semantically_equal(dict(r._graph.nodes(data=True)), {
-        '1': {'routes': ['1'], 'id': '1', 'x': 4.0, 'y': 2.0, 'epsg': 'epsg:27700', 'name': '',
+        '1': {'routes': {'1'}, 'id': '1', 'x': 4.0, 'y': 2.0, 'epsg': 'epsg:27700', 'name': '',
               'lat': 49.76682779861249, 'lon': -7.557106577683727, 's2_id': 5205973754090531959,
               'additional_attributes': {'linkRefId'}, 'linkRefId': '1'},
-        '2': {'routes': ['1'], 'id': '2', 'x': 1.0, 'y': 2.0, 'epsg': 'epsg:27700', 'name': '',
+        '2': {'routes': {'1'}, 'id': '2', 'x': 1.0, 'y': 2.0, 'epsg': 'epsg:27700', 'name': '',
               'lat': 49.766825803756994, 'lon': -7.557148039524952, 's2_id': 5205973754090365183,
               'additional_attributes': {'linkRefId'}, 'linkRefId': '2'},
-        '3': {'routes': ['1'], 'id': '3', 'x': 3.0, 'y': 3.0, 'epsg': 'epsg:27700', 'name': '',
+        '3': {'routes': {'1'}, 'id': '3', 'x': 3.0, 'y': 3.0, 'epsg': 'epsg:27700', 'name': '',
               'lat': 49.76683608549253, 'lon': -7.557121424907424, 's2_id': 5205973754090203369,
               'additional_attributes': {'linkRefId'}, 'linkRefId': '3'},
-        '4': {'routes': ['1'], 'id': '4', 'x': 7.0, 'y': 5.0, 'epsg': 'epsg:27700', 'name': '',
+        '4': {'routes': {'1'}, 'id': '4', 'x': 7.0, 'y': 5.0, 'epsg': 'epsg:27700', 'name': '',
               'lat': 49.766856648946295, 'lon': -7.5570681956375, 's2_id': 5205973754097123809,
               'additional_attributes': {'linkRefId'}, 'linkRefId': '4'}})
-    assert_semantically_equal(list(r._graph.edges(data=True)), [('1', '2', {'routes': ['1'], 'modes': ['bus']}),
-                                                                ('2', '3', {'routes': ['1'], 'modes': ['bus']}),
-                                                                ('3', '4', {'routes': ['1'], 'modes': ['bus']})])
+    assert_semantically_equal(r._graph.edges(data=True)._adjdict,
+                              {'1': {'2': {'routes': {'1'}}}, '2': {'3': {'routes': {'1'}}},
+                               '3': {'4': {'routes': {'1'}}}, '4': {}})
     log = r._graph.graph.pop('change_log')
     assert log.empty
     assert_semantically_equal(r._graph.graph, {'name': 'Route graph', 'routes': {
-        '1': {'route_short_name': 'name', 'mode': 'bus', 'trips': {'1': '10:00:00', '2': '20:00:00'},
+        '1': {'route_short_name': 'name', 'mode': 'bus',
+              'trips': {'trip_id': ['1', '2'], 'trip_departure_time': ['10:00:00', '20:00:00'], 'vehicle_id': ['veh_1_bus', 'veh_2_bus']},
               'arrival_offsets': ['00:00:00', '00:03:00', '00:07:00', '00:13:00'],
               'departure_offsets': ['00:00:00', '00:05:00', '00:09:00', '00:15:00'], 'route_long_name': '', 'id': '1',
               'route': ['1', '2', '3', '4'], 'await_departure': [], 'ordered_stops': ['1', '2', '3', '4']}},
@@ -77,7 +84,7 @@ def test_initiating_route(route):
 
 def test__repr__shows_stops_and_trips_length(route):
     assert str(len(route.ordered_stops)) in route.__repr__()
-    assert str(len(route.trips)) in route.__repr__()
+    assert str(len(route.trips['trip_id'])) in route.__repr__()
 
 
 def test__str__shows_info(route):
@@ -96,7 +103,7 @@ def test_info_shows_id_name_and_len_of_stops_and_trips(route):
     assert route.id in info
     assert route.route_short_name in info
     assert str(len(route.ordered_stops)) in info
-    assert str(len(route.trips)) in info
+    assert str(len(route.trips['trip_id'])) in info
 
 
 def test_plot_delegates_to_util_plot_plot_graph_routes(mocker, route):
@@ -110,32 +117,36 @@ def test_build_graph_builds_correct_graph():
                   mode='bus',
                   stops=[Stop(id='1', x=4, y=2, epsg='epsg:27700'), Stop(id='2', x=1, y=2, epsg='epsg:27700'),
                          Stop(id='3', x=3, y=3, epsg='epsg:27700'), Stop(id='4', x=7, y=5, epsg='epsg:27700')],
-                  trips={'1': '1', '2': '2'}, arrival_offsets=['1', '2'], departure_offsets=['1', '2'])
+                  trips={'trip_id': ['1', '2'],
+                         'trip_departure_time': ['1', '2'],
+                         'vehicle_id': ['veh_3_bus', 'veh_4_bus']},
+                  arrival_offsets=['1', '2'], departure_offsets=['1', '2'])
     g = route.graph()
     assert_semantically_equal(dict(g.nodes(data=True)),
-                              {'1': {'routes': [''], 'id': '1', 'x': 4.0, 'y': 2.0, 'epsg': 'epsg:27700',
+                              {'1': {'routes': {''}, 'id': '1', 'x': 4.0, 'y': 2.0, 'epsg': 'epsg:27700',
                                      'lat': 49.76682779861249, 'lon': -7.557106577683727, 's2_id': 5205973754090531959,
                                      'name': '', 'additional_attributes': set()},
-                               '2': {'routes': [''], 'id': '2', 'x': 1.0, 'y': 2.0, 'epsg': 'epsg:27700',
+                               '2': {'routes': {''}, 'id': '2', 'x': 1.0, 'y': 2.0, 'epsg': 'epsg:27700',
                                      'lat': 49.766825803756994, 'lon': -7.557148039524952, 's2_id': 5205973754090365183,
                                      'name': '', 'additional_attributes': set()},
-                               '3': {'routes': [''], 'id': '3', 'x': 3.0, 'y': 3.0, 'epsg': 'epsg:27700',
+                               '3': {'routes': {''}, 'id': '3', 'x': 3.0, 'y': 3.0, 'epsg': 'epsg:27700',
                                      'lat': 49.76683608549253, 'lon': -7.557121424907424, 's2_id': 5205973754090203369,
                                      'name': '', 'additional_attributes': set()},
-                               '4': {'routes': [''], 'id': '4', 'x': 7.0, 'y': 5.0, 'epsg': 'epsg:27700',
+                               '4': {'routes': {''}, 'id': '4', 'x': 7.0, 'y': 5.0, 'epsg': 'epsg:27700',
                                      'lat': 49.766856648946295, 'lon': -7.5570681956375, 's2_id': 5205973754097123809,
                                      'name': '', 'additional_attributes': set()}})
-    assert_semantically_equal(list(g.edges(data=True)),
-                              [('1', '2', {'routes': [''], 'modes': ['bus']}),
-                               ('2', '3', {'routes': [''], 'modes': ['bus']}),
-                               ('3', '4', {'routes': [''], 'modes': ['bus']})])
+    assert_semantically_equal(g.edges(data=True)._adjdict,
+                              {'1': {'2': {'routes': {''}}}, '2': {'3': {'routes': {''}}}, '3': {'4': {'routes': {''}}},
+                               '4': {}})
 
 
 def test_routes_equal(stop_epsg_27700):
     a = Route(
         route_short_name='route', mode='bus',
         stops=[stop_epsg_27700, stop_epsg_27700],
-        trips={'VJ00938baa194cee94700312812d208fe79f3297ee_04:40:00': '04:40:00'},
+        trips={'trip_id': ['VJ00938baa194cee94700312812d208fe79f3297ee_04:40:00'],
+               'trip_departure_time': ['04:40:00'],
+               'vehicle_id': ['veh_1_bus']},
         arrival_offsets=['00:00:00', '00:02:00'],
         departure_offsets=['00:00:00', '00:02:00'])
 
@@ -153,14 +164,18 @@ def test_routes_exact(stop_epsg_27700):
     a = Route(
         route_short_name='route', mode='bus',
         stops=[stop_epsg_27700, stop_epsg_27700],
-        trips={'VJ00938baa194cee94700312812d208fe79f3297ee_04:40:00': '04:40:00'},
+        trips={'trip_id': ['VJ00938baa194cee94700312812d208fe79f3297ee_04:40:00'],
+               'trip_departure_time': ['04:40:00'],
+               'vehicle_id': ['veh_1_bus']},
         arrival_offsets=['00:00:00', '00:02:00'],
         departure_offsets=['00:00:00', '00:02:00'])
 
     b = Route(
         route_short_name='route', mode='bus',
         stops=[stop_epsg_27700, stop_epsg_27700],
-        trips={'VJ00938baa194cee94700312812d208fe79f3297ee_04:40:00': '04:40:00'},
+        trips={'trip_id': ['VJ00938baa194cee94700312812d208fe79f3297ee_04:40:00'],
+               'trip_departure_time': ['04:40:00'],
+               'vehicle_id': ['veh_1_bus']},
         arrival_offsets=['00:00:00', '00:02:00'],
         departure_offsets=['00:00:00', '00:02:00'])
 
@@ -236,7 +251,10 @@ def test_has_correctly_ordered_route_with_a_correct_route():
     r = Route(route_short_name='name',
               mode='bus',
               stops=[a, b, c],
-              trips={'1': '1', '2': '2'}, arrival_offsets=['1', '2'], departure_offsets=['1', '2'],
+              trips={'trip_id': ['1', '2'],
+                     'trip_departure_time': ['10:00:00', '20:00:00'],
+                     'vehicle_id': ['veh_1_bus', 'veh_2_bus']},
+              arrival_offsets=['1', '2'], departure_offsets=['1', '2'],
               route=['10', '15', '20', '25', '30'], id='1')
     assert r.has_correctly_ordered_route()
 
@@ -252,7 +270,10 @@ def test_has_correctly_ordered_route_with_disordered_route():
     r = Route(route_short_name='name',
               mode='bus',
               stops=[a, b, c],
-              trips={'1': '1', '2': '2'}, arrival_offsets=['1', '2'], departure_offsets=['1', '2'],
+              trips={'trip_id': ['1', '2'],
+                     'trip_departure_time': ['10:00:00', '20:00:00'],
+                     'vehicle_id': ['veh_1_bus', 'veh_2_bus']},
+              arrival_offsets=['1', '2'], departure_offsets=['1', '2'],
               route=['10', '15', '30', '25', '20'], id='1')
     assert not r.has_correctly_ordered_route()
 
@@ -267,7 +288,10 @@ def test_has_correctly_ordered_route_with_stop_missing_linkrefid():
     r = Route(route_short_name='name',
               mode='bus',
               stops=[a, b, c],
-              trips={'1': '1', '2': '2'}, arrival_offsets=['1', '2'], departure_offsets=['1', '2'],
+              trips={'trip_id': ['1', '2'],
+                     'trip_departure_time': ['10:00:00', '20:00:00'],
+                     'vehicle_id': ['veh_1_bus', 'veh_2_bus']},
+              arrival_offsets=['1', '2'], departure_offsets=['1', '2'],
               route=['10', '15', '30', '25', '20'], id='1')
     assert not r.has_correctly_ordered_route()
 
@@ -283,7 +307,10 @@ def test_has_correctly_ordered_route_with_no_route():
     r = Route(route_short_name='name',
               mode='bus',
               stops=[a, b, c],
-              trips={'1': '1', '2': '2'}, arrival_offsets=['1', '2'], departure_offsets=['1', '2'],
+              trips={'trip_id': ['1', '2'],
+                     'trip_departure_time': ['10:00:00', '20:00:00'],
+                     'vehicle_id': ['veh_1_bus', 'veh_2_bus']},
+              arrival_offsets=['1', '2'], departure_offsets=['1', '2'],
               route=[], id='1')
     assert not r.has_correctly_ordered_route()
 
@@ -327,7 +354,7 @@ def test_is_valid_with_non_network_route(route):
     assert not route.is_valid_route()
 
 
-def test_is_valid_with_sinlge_stop_network():
+def test_is_valid_with_single_stop_network():
     route = Route(route_short_name='name',
                   mode='bus',
                   stops=[Stop(id='1', x=4, y=2, epsg='epsg:27700')],
@@ -336,7 +363,7 @@ def test_is_valid_with_sinlge_stop_network():
 
 
 def test_building_trips_dataframe(route):
-    df = route.generate_trips_dataframe()
+    df = route.route_trips_with_stops_to_dataframe()
 
     correct_df = DataFrame({'departure_time': {0: Timestamp('1970-01-01 10:00:00'), 1: Timestamp('1970-01-01 10:05:00'),
                                                2: Timestamp('1970-01-01 10:09:00'), 3: Timestamp('1970-01-01 20:00:00'),
@@ -348,6 +375,8 @@ def test_building_trips_dataframe(route):
                             'from_stop': {0: '1', 1: '2', 2: '3', 3: '1', 4: '2', 5: '3'},
                             'to_stop': {0: '2', 1: '3', 2: '4', 3: '2', 4: '3', 5: '4'},
                             'trip': {0: '1', 1: '1', 2: '1', 3: '2', 4: '2', 5: '2'},
+                            'vehicle_id': {0: 'veh_1_bus', 1: 'veh_1_bus', 2: 'veh_1_bus', 3: 'veh_2_bus',
+                                           4: 'veh_2_bus', 5: 'veh_2_bus'},
                             'route': {0: '1', 1: '1', 2: '1', 3: '1', 4: '1', 5: '1'},
                             'route_name': {0: 'name', 1: 'name', 2: 'name', 3: 'name', 4: 'name', 5: 'name'},
                             'mode': {0: 'bus', 1: 'bus', 2: 'bus', 3: 'bus', 4: 'bus', 5: 'bus'},

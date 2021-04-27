@@ -4,7 +4,7 @@ from traitlets.config import Config
 from nbconvert import MarkdownExporter
 
 
-notebooks_dir = os.path.join(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')), 'notebooks')
+notebooks_dir = os.path.dirname(__file__)
 wiki_dir = os.path.join(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')), 'genet.wiki')
 
 md_exporter = MarkdownExporter()

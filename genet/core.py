@@ -1073,7 +1073,7 @@ class Network:
         elif value is None:
             return set()
 
-    def route_schedule(self, services: Union[list, set] = None, solver='glpk', allow_partial=True,
+    def route_schedule(self, services: Union[list, set] = None, solver='glpk', spatial_tree=None, allow_partial=True,
                        distance_threshold=30, step_size=10, additional_modes=None, allow_directional_split=False):
         """
         Method to find relationship between all Services in Schedule and the Network. It finds closest
@@ -1114,8 +1114,10 @@ class Network:
         :return: None, updates Network object and the Schedule object within.
         """
         if self.schedule:
-            logging.info('Building Spatial Tree')
-            spatial_tree = spatial.SpatialTree(self)
+
+            if(spatial_tree==None):
+                logging.info('Building Spatial Tree')
+                spatial_tree = spatial.SpatialTree(self)
             if additional_modes is None:
                 additional_modes = {}
             else:
@@ -1181,7 +1183,9 @@ class Network:
                                               f'\n{traceback.format_exc()}')
                                 unsnapped_services.add(service_id)
             if changeset is not None:
+                logging.info("Applying Max Stable Changes")
                 self._apply_max_stable_changes(changeset)
+                logging.info("Applied Max Stable Changes")
             return unsnapped_services
         else:
             logging.warning('Schedule object not found')

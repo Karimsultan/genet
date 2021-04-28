@@ -43,7 +43,9 @@ for key, value in EXTENDED_TYPE_DICT.items():
         new_keys.append(item)
         new_values.append(key)
 
-# EXTENDED_TYPE_MAP = {GTFS mode integer : mode}
-# e.g. {1: "subway", 400: "subway", 401: "subway", 402: "subway", ...]}
+EXTENDED_TYPE_MAP = {4: 'ferry', 6: 'gondola', 52: 'light_rail_luas_red', 51: 'light_rail_luas_green',
+            251: 'heavy_rail_dart', 252: 'heavy_rail_other', 351: 'bus_dublin', 352: 'bus_other_city_town',
+            353: 'bus_interurban_rural'}
+
 EXTENDED_TYPE_MAP = dict(zip(new_keys, new_values))
 del new_keys, new_values

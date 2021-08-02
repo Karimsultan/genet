@@ -7,9 +7,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-    - uses: actions/setup-python@v1
+    - uses: actions/setup-python@v2
       with:
-        python-version: pypy
+        python-version: pypy-3.7
     - uses: actions/cache@v1
       with:
         path: ~/.cache/pip

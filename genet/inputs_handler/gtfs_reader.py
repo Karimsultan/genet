@@ -77,7 +77,7 @@ def read_gtfs_to_db_like_tables(path):
 
         elif "routes" in file:
             logging.info("Reading routes")
-            routes_db = pd.read_csv(file, dtype={'route_id': str})
+            routes_db = pd.read_csv(file, dtype={'route_id': str, 'route_long_name': str, 'route_short_name': str})
 
     return stop_times_db, stops_db, trips_db, routes_db
 

@@ -192,3 +192,11 @@ def test_read_gtfs_returns_expected_schedule(correct_stops_to_service_mapping_fr
         )])
     assert_semantically_equal(schedule.stop_to_service_ids_map(), correct_stops_to_service_mapping_from_test_gtfs)
     assert_semantically_equal(schedule.stop_to_route_ids_map(), correct_stops_to_route_mapping_from_test_gtfs)
+
+
+gtfs_other_dtypes = os.path.abspath(os.path.join(os.path.dirname(__file__), "test_data", "gtfs_other_dtypes"))
+
+
+def test_reading_gtfs_with_numeric_names_generates_standard_outputs(tmpdir):
+    schedule = read.read_gtfs(gtfs_other_dtypes, '20190604')
+    schedule.generate_standard_outputs(tmpdir)

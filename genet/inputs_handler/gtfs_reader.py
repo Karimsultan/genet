@@ -149,6 +149,8 @@ def gtfs_db_to_schedule_graph(stop_times_db, stops_db, trips_db, routes_db, serv
         return group
 
     trips_db = trips_db[trips_db['service_id'].isin(services)]
+    routes_db['route_short_name'] = routes_db['route_short_name'].fillna('')
+    routes_db['route_long_name'] = routes_db['route_long_name'].fillna('')
     df = trips_db[['route_id', 'trip_id']].merge(
         routes_db[['route_id', 'route_type', 'route_short_name', 'route_long_name', 'route_color']], on='route_id',
         how='left')

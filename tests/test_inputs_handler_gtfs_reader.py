@@ -63,3 +63,19 @@ def test_reading_loopy_gtfs_removes_duplicated_stops():
          os.path.abspath(os.path.join(os.path.dirname(__file__), "test_data", "loopy_gtfs")),
         '20190604')
     assert schedule_graph.graph['routes']['1001_0']['ordered_stops'] == ['BSE', 'BSN', 'BSE', 'BSN']
+
+
+def test_reading_gtfs_zip_picks_up_additional_directory(mocker, tmpdir):
+    mocker.patch.object(os.path, 'dirname', return_value=tmpdir)
+    expected_unzipped_path = os.path.join(tmpdir, 'tmp')
+    assert not os.path.exists(expected_unzipped_path)
+    schedule_graph = gtfs_reader.read_gtfs_to_schedule_graph(gtfs_test_zip_file, '20190604')
+    # check the folder is cleaned up after
+    assert not os.path.exists(expected_unzipped_path)
+
+
+def test_reading_gtfs_zip_doesnt_delete_original_dataset(mocker, tmpdir):
+    mocker.patch.object(os.path, 'dirname', return_value=tmpdir)
+    schedule_graph = gtfs_reader.read_gtfs_to_schedule_graph(gtfs_test_zip_file, '20190604')
+    # check the folder is cleaned up after
+    assert os.path.exists(gtfs_test_zip_file)

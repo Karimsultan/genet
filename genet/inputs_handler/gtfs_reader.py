@@ -227,7 +227,11 @@ def read_gtfs_to_schedule_graph(path: str, day: str):
         import zipfile
         with zipfile.ZipFile(path, 'r') as zip_ref:
             zip_ref.extractall(gtfs_path)
-        gtfs_path = os.path.join(gtfs_path, os.path.splitext(os.path.basename(path))[0])
+            subdirectory = [f for f in zip_ref.namelist() if f.endswith('/')]
+            if len(subdirectory) == 1:
+                gtfs_path = os.path.join(gtfs_path, subdirectory[0])
+            elif len(subdirectory) > 1:
+                raise NotImplementedError('This zip has multiple subdirectories and cannot be read.')
     else:
         gtfs_path = path
 

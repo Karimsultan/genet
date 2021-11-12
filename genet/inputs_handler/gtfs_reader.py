@@ -221,7 +221,8 @@ def gtfs_db_to_schedule_graph(stop_times_db, stops_db, trips_db, routes_db, serv
 
 def read_gtfs_to_schedule_graph(path: str, day: str):
     if persistence.is_zip(path):
-        gtfs_path = os.path.join(os.path.dirname(path), 'tmp')
+        folder_name = os.path.splitext(os.path.basename(path))[0]
+        gtfs_path = os.path.join(os.path.dirname(path), folder_name)
         if not os.path.exists(gtfs_path):
             os.makedirs(gtfs_path)
         import zipfile
@@ -239,6 +240,4 @@ def read_gtfs_to_schedule_graph(path: str, day: str):
     stop_times_db, stops_db, trips_db, routes_db = read_gtfs_to_db_like_tables(gtfs_path)
     schedule_graph = gtfs_db_to_schedule_graph(stop_times_db, stops_db, trips_db, routes_db, services)
 
-    if persistence.is_zip(path):
-        shutil.rmtree(os.path.dirname(gtfs_path))
     return schedule_graph

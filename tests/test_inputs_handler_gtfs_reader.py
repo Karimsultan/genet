@@ -67,15 +67,15 @@ def test_reading_loopy_gtfs_removes_duplicated_stops():
 
 def test_reading_gtfs_zip_picks_up_additional_directory(mocker, tmpdir):
     mocker.patch.object(os.path, 'dirname', return_value=tmpdir)
-    expected_unzipped_path = os.path.join(tmpdir, 'tmp')
+    expected_unzipped_path = os.path.join(tmpdir, 'gtfs')
     assert not os.path.exists(expected_unzipped_path)
     schedule_graph = gtfs_reader.read_gtfs_to_schedule_graph(gtfs_test_zip_file, '20190604')
-    # check the folder is cleaned up after
-    assert not os.path.exists(expected_unzipped_path)
+    # check for unzipped gtfs folder
+    assert os.path.exists(expected_unzipped_path)
 
 
 def test_reading_gtfs_zip_doesnt_delete_original_dataset(mocker, tmpdir):
     mocker.patch.object(os.path, 'dirname', return_value=tmpdir)
     schedule_graph = gtfs_reader.read_gtfs_to_schedule_graph(gtfs_test_zip_file, '20190604')
-    # check the folder is cleaned up after
+    # check the zip is still there
     assert os.path.exists(gtfs_test_zip_file)

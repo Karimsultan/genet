@@ -14,7 +14,7 @@
         <link refId="1"/>
         <link refId="2"/>
         <link refId="3"/>
-        <lanes type="absolute" value="1.0"/>
+        <flowCapacity type="scaleFactor" value="0.5"/>
         <freespeed type="absolute" value="10.0"/>
         <lanes type="absolute" value="1.0"/>
     </networkChangeEvent>

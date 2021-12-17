@@ -32,9 +32,9 @@ def network_change_events_dict():
     return {'06:00:00': {'links': {'3', '1', '2'}, 'freespeed': {'type': 'absolute', 'value': '1.0'},
                          'lanes': {'type': 'absolute', 'value': '2.0'},
                          'flowCapacity': {'type': 'scaleFactor', 'value': '2'}},
-            '9:00:00': {'links': {'3', '1', '2'}, 'lanes': {'type': 'absolute', 'value': '1.0'},
-                        'freespeed': {'type': 'absolute', 'value': '10.0'},
-                        'flowCapacity': {'type': 'scaleFactor', 'value': '0.5'}}}
+            '09:00:00': {'links': {'3', '1', '2'}, 'lanes': {'type': 'absolute', 'value': '1.0'},
+                         'freespeed': {'type': 'absolute', 'value': '10.0'},
+                         'flowCapacity': {'type': 'scaleFactor', 'value': '0.5'}}}
 
 
 def test_reading_xml(network_change_events_example_path, network_change_events_dict):
@@ -42,14 +42,17 @@ def test_reading_xml(network_change_events_example_path, network_change_events_d
     assert_semantically_equal(ch_events, network_change_events_dict)
 
 
-def test_writes_well_formed_and_valid_network_change_events_xml_file(tmpdir, network_change_events_schema, network_change_events_dict):
+def test_writes_well_formed_and_valid_network_change_events_xml_file(tmpdir,
+                                                                     network_change_events_schema,
+                                                                     network_change_events_dict):
     fname = 'net_change_evs.xml'
     expected_xml = os.path.join(tmpdir, fname)
     time_variant_network.write_network_change_events_xml(network_change_events_dict, tmpdir, fname=fname)
 
     xml_obj = lxml.etree.parse(expected_xml)
-    assert network_change_events_schema.assertValid(
-        xml_obj), f'Doc generated at {expected_xml} is not valid against ' \
+    is_valid_xml = network_change_events_schema.validate(xml_obj)
+    assert is_valid_xml is True, \
+        f'Doc generated at {expected_xml} is not valid against ' \
                   f'XSD due to {network_change_events_schema.error_log.filter_from_errors()}'
 
 

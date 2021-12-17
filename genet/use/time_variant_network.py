@@ -37,5 +37,6 @@ def write_network_change_events_xml(change_events, output_dir, fname='networkCha
                 with xf.element("networkChangeEvent", {'startTime': event_time}):
                     for link in change_event['links']:
                         xf.write(etree.Element("link", {'refId': link}))
-                    for change_type in set(change_event) - {'links'}:
-                        xf.write(etree.Element(change_type, change_event[change_type]))
+                    xf.write(etree.Element("flowCapacity", change_event['flowCapacity']))
+                    xf.write(etree.Element("freespeed", change_event['freespeed']))
+                    xf.write(etree.Element("lanes", change_event['lanes']))

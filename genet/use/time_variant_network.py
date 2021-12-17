@@ -20,6 +20,7 @@ def read_network_change_events_xml(path):
             ch_event[tag] = elem.attrib
     return change_events
 
+
 def write_network_change_events_xml(change_events, output_dir, fname='networkChangeEvents.xml'):
     fpath = os.path.join(output_dir, fname)
     logging.info('Writing {}'.format(fpath))

@@ -10,11 +10,11 @@
         <lanes type="absolute" value="2.0"/>
     </networkChangeEvent>
 
-    <networkChangeEvent startTime="9:00:00">
+    <networkChangeEvent startTime="09:00:00">
         <link refId="1"/>
         <link refId="2"/>
         <link refId="3"/>
-        <flowCapacity type="scaleFactor" value="0.5"/>
+        <lanes type="absolute" value="1.0"/>
         <freespeed type="absolute" value="10.0"/>
         <lanes type="absolute" value="1.0"/>
     </networkChangeEvent>

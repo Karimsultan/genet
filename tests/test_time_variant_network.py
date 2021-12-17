@@ -12,9 +12,12 @@ os.chdir(root_dir)
 
 
 @pytest.fixture
-def network_change_events_dtd():
-    dtd_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "test_data/dtd/matsim/networkChangeEvents.xsd"))
-    yield lxml.etree.DTD(dtd_path)
+def network_change_events_schema():
+    xsd_path = os.path.abspath(os.path.join(os.path.dirname(__file__),
+                                            "test_data", "dtd", "matsim", "networkChangeEvents.xsd"))
+
+    xml_schema_doc = lxml.etree.parse(xsd_path)
+    yield lxml.etree.XMLSchema(xml_schema_doc)
 
 
 @pytest.fixture
@@ -39,15 +42,15 @@ def test_reading_xml(network_change_events_example_path, network_change_events_d
     assert_semantically_equal(ch_events, network_change_events_dict)
 
 
-def test_writes_well_formed_and_valid_network_change_events_xml_file(tmpdir, network_change_events_dtd, network_change_events_dict):
+def test_writes_well_formed_and_valid_network_change_events_xml_file(tmpdir, network_change_events_schema, network_change_events_dict):
     fname = 'net_change_evs.xml'
     expected_xml = os.path.join(tmpdir, fname)
     time_variant_network.write_network_change_events_xml(network_change_events_dict, tmpdir, fname=fname)
 
     xml_obj = lxml.etree.parse(expected_xml)
-    assert network_change_events_dtd.validate(
+    assert network_change_events_schema.assertValid(
         xml_obj), f'Doc generated at {expected_xml} is not valid against ' \
-                  f'DTD due to {network_change_events_dtd.error_log.filter_from_errors()}'
+                  f'XSD due to {network_change_events_schema.error_log.filter_from_errors()}'
 
 
 def test_saving_network_change_events_to_xml_produces_xml_file(network_change_events_dict, tmpdir):

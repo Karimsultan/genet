@@ -210,7 +210,7 @@ class Network:
         else:
             self.transformer = None
 
-    def simplify(self, no_processes=1, suggested_map=None):
+    def simplify(self, no_processes=1, suggested_map=None, keep_loops=False):
         """
         Method which simplifies the network
         :param no_processes: Optional, defaults to 1. You can select a number appropriate for the machine you're
@@ -220,14 +220,36 @@ class Network:
             network and values that are new link ID strings. For example simplification  generated in a previous
             simplification attempt. This does not affect WHICH nodes are simplified, only the resulting link IDs if
             the IDs and simplification levels match. For any cases that do not match, new IDs will be generated.
-        :return:
+        :param keep_loops: bool, defaults to False. Simplification often leads to self-loops, these will be removed
+            unless keep_loops=True
+        :return: tuple:
+            set of indices that could not be used in simplification using suggested_map, returns empty set if not
+            being used
+            set of link IDs that resulted in self-loops
         """
         if self.is_simplified():
             raise RuntimeError('This network has already been simplified. You cannot simplify the graph twice.')
+
         failed_suggested_ids = simplification.simplify_graph(self, no_processes, suggested_map)
+
+        df = self.link_attribute_data_under_keys(keys=['from', 'to'])
+        df = df[df['from'] == df['to']]
+        loops = set(df.index)
+        # pt stops can be loops
+        pt_stop_loops = set(self.schedule.stop_attribute_data(keys=['linkRefId'])['linkRefId'])
+        to_remove = loops - pt_stop_loops
+        if to_remove:
+            logging.info(f'Simplification led to {len(loops)} self-loop links in the network. '
+                         f'{len(to_remove)} are not connected to the PT stops.')
+            if not keep_loops:
+                logging.info('The self-loops with no reference to PT stops will now be removed. '
+                             'To disable this behaviour, use `keep_loops=True`. '
+                             'Investigate the change log for more information about these links.')
+                self.remove_links(to_remove)
+
         # mark graph as having been simplified
         self.graph.graph["simplified"] = True
-        return failed_suggested_ids
+        return failed_suggested_ids, to_remove
 
     def is_simplified(self):
         return self.graph.graph["simplified"]
@@ -534,6 +556,7 @@ class Network:
         :param mode: which mode to remove
         :return: updates graph
         """
+
         def empty_modes(mode_attrib):
             if not mode_attrib:
                 return True

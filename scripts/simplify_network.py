@@ -85,7 +85,7 @@ if __name__ == '__main__':
     logging.info('Simplifying the Network.')
 
     start = time.time()
-    failed_suggested_ids = n.simplify(no_processes=processes, suggested_map=simplification_map)
+    failed_suggested_ids, to_remove = n.simplify(no_processes=processes, suggested_map=simplification_map)
     end = time.time()
 
     logging.info(
@@ -97,6 +97,8 @@ if __name__ == '__main__':
             {'failed_suggested_ids': list(failed_suggested_ids),
              'suggested_map': simplification_map},
             f, ensure_ascii=False, indent=4)
+    with open(os.path.join(output_dir, 'deleted_self_loops.json'), 'w', encoding='utf-8') as f:
+        json.dump({'deleted_self_loops': list(to_remove)}, f, ensure_ascii=False, indent=4)
 
     n.write_to_matsim(output_dir)
 

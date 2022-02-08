@@ -100,7 +100,7 @@ def _assemble_path_data(n, indexed_paths_to_simplify):
             'node_data': _extract_node_data(n, path),
             'nodes_to_remove': path[1:-1]
         }
-        return_d[k]['ids'] = return_d[k]['link_data']['id']
+        return_d[k]['ids'] = set(return_d[k]['link_data']['id'])
     return return_d
 
 
@@ -170,7 +170,7 @@ def _get_edge_groups_to_simplify(G, no_processes=1):
     )
 
 
-def simplify_graph(n, no_processes=1):
+def simplify_graph(n, no_processes=1, suggested_map=None):
     """
     MONKEY PATCH OF OSMNX'S GRAPH SIMPLIFICATION ALGO
 
@@ -185,12 +185,17 @@ def simplify_graph(n, no_processes=1):
     ----------
     n: genet.Network object
     no_processes: number of processes to split some of the processess across
+    suggested_map: dictionary of suggested link IDs mapping between old network and new links, does not affect
+        how the graph gets simplified.
 
     Returns
     -------
     None, updates n.graph, indexing and schedule routes. Adds a new attribute to n that records map between old
     and new link indices
     """
+    if suggested_map is None:
+        suggested_map = {}
+
     logging.info("Begin simplifying the graph")
     initial_node_count = len(list(n.graph.nodes()))
     initial_edge_count = len(list(n.graph.edges()))
@@ -201,8 +206,20 @@ def simplify_graph(n, no_processes=1):
                          set(tuple(x) for x in _get_edge_groups_to_simplify(n.graph, no_processes=no_processes))]
     logging.info(f'Found {len(edges_to_simplify)} paths to simplify.')
 
-    indexed_paths_to_simplify = dict(zip(n.generate_indices_for_n_edges(len(edges_to_simplify)), edges_to_simplify))
+    indexed_paths_to_simplify = dict(
+        zip(n.generate_indices_for_n_edges(len(edges_to_simplify), avoid_keys=set(suggested_map.values())),
+            edges_to_simplify))
     indexed_paths_to_simplify = _assemble_path_data(n, indexed_paths_to_simplify)
+
+    failed_suggestions = set()
+    if suggested_map:
+        indexed_paths_to_simplify = reindex_paths(indexed_paths_to_simplify, suggested_map)
+        failed_suggestions = set(suggested_map.values()) - set(indexed_paths_to_simplify)
+        logging.info('Simplification with suggested mapping resulted in '
+                     f'{len(set(suggested_map.values()) - failed_suggestions)}/{set(suggested_map.values())} IDs '
+                     'being inherited from the suggested map')
+        if failed_suggestions:
+            logging.warning(f'{len(failed_suggestions)} suggested mappings failed.')
 
     nodes_to_remove = set()
     for k, data in indexed_paths_to_simplify.items():
@@ -227,7 +244,7 @@ def simplify_graph(n, no_processes=1):
         indexed_paths_to_simplify[new_id] = indexed_paths_to_simplify[old_id]
         del indexed_paths_to_simplify[old_id]
     new_ids = list(indexed_paths_to_simplify.keys())
-    old_ids = [set(indexed_paths_to_simplify[_id]['ids']) for _id in new_ids]
+    old_ids = [indexed_paths_to_simplify[_id]['ids'] for _id in new_ids]
     n.change_log = n.change_log.simplify_bunch(old_ids, new_ids, indexed_paths_to_simplify, links_to_add)
     del links_to_add
 
@@ -254,6 +271,41 @@ def simplify_graph(n, no_processes=1):
         n.schedule.apply_attributes_to_routes(df_routes.T.to_dict())
         logging.info("Updated Network Routes")
         logging.info("Finished simplifying network")
+
+    return failed_suggestions
+
+
+def reindex_paths(indexed_paths_to_simplify, suggested_map):
+    # initial link_id : simplified link ID map
+    initial_indexed_map = {}
+    for key, value in indexed_paths_to_simplify.items():
+        initial_indexed_map = {**initial_indexed_map, **{_id: key for _id in value['ids']}}
+
+    # create a map between initial and suggested IDs
+    bridge_map = {initial_id: suggested_map[link_id] for link_id, initial_id in initial_indexed_map.items() if
+                  link_id in suggested_map}
+
+    # group by initial index
+    grouped_bridge_map = {}
+    for key, value in sorted(bridge_map.items()):
+        grouped_bridge_map.setdefault(value, set()).add(key)
+
+    # group the suggested map to reference later when checking for the same level of simplification
+    grouped_suggested_map = {}
+    for key, value in sorted(suggested_map.items()):
+        grouped_suggested_map.setdefault(value, set()).add(key)
+
+    # reindex those for which groups of links to be simplified coincide
+    for inherited_idx, v in grouped_bridge_map.items():
+        if len(v) == 1:
+            initial_idx = list(v)[0]
+            # check for coinciding level of simplification
+            if grouped_suggested_map[inherited_idx] == indexed_paths_to_simplify[initial_idx]['ids']:
+                # reindex
+                indexed_paths_to_simplify[inherited_idx] = indexed_paths_to_simplify[initial_idx]
+                del indexed_paths_to_simplify[initial_idx]
+
+    return indexed_paths_to_simplify
 
 
 def update_link_ids(old_route, link_mapping):

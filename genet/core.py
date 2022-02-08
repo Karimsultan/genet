@@ -210,12 +210,24 @@ class Network:
         else:
             self.transformer = None
 
-    def simplify(self, no_processes=1):
+    def simplify(self, no_processes=1, suggested_map=None):
+        """
+        Method which simplifies the network
+        :param no_processes: Optional, defaults to 1. You can select a number appropriate for the machine you're
+            using to spread the computational load. Though we have seen large memory spikes when using more than
+            one process. It may take a few attempts to get this number right and you should start with 1.
+        :param suggested_map: Suggested link ID map for simplification. Dictionary with keys that are link IDs in the
+            network and values that are new link ID strings. For example simplification  generated in a previous
+            simplification attempt. This does not affect WHICH nodes are simplified, only the resulting link IDs if
+            the IDs and simplification levels match. For any cases that do not match, new IDs will be generated.
+        :return:
+        """
         if self.is_simplified():
             raise RuntimeError('This network has already been simplified. You cannot simplify the graph twice.')
-        simplification.simplify_graph(self, no_processes)
+        failed_suggested_ids = simplification.simplify_graph(self, no_processes, suggested_map)
         # mark graph as having been simplified
         self.graph.graph["simplified"] = True
+        return failed_suggested_ids
 
     def is_simplified(self):
         return self.graph.graph["simplified"]

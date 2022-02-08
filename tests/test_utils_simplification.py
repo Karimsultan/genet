@@ -245,3 +245,96 @@ def test_building_path_throws_error_when_there_is_undetected_branching():
     with pytest.raises(RuntimeError) as error_info:
         simplification._build_paths(path_start_points, endpoints, neighbours)
     assert "branching" in str(error_info.value)
+
+
+def test_reindexing_with_suggested_mapping_when_paths_coincide():
+    path_data = {
+            'path': ['n_1', 'n_2', 'n_3', 'n_4'],
+            'link_data': {'from': ['n_1', 'n_2', 'n_3'], 'to': ['n_2', 'n_3', 'n_4'], 'freespeed': [1, 1, 1],
+                                 'capacity': [1, 1, 1], 'permlanes': [1, 1, 1], 'length': [1, 1, 1],
+                                 'modes': [{'car'}, {'car'}, {'car'}], 'id': ['l_1', 'l_2', 'l_3']},
+            'node_data': {'n_1': {'x': 1, 'y': 1, 's2_id': 1, 'id': 'n_1'},
+                                 'n_2': {'x': 2, 'y': 2, 's2_id': 2, 'id': 'n_2'},
+                                 'n_3': {'x': 3, 'y': 3, 's2_id': 3, 'id': 'n_3'},
+                                 'n_4': {'x': 4, 'y': 4, 's2_id': 4, 'id': 'n_4'}},
+            'nodes_to_remove': ['n_2', 'n_3'],
+            'ids': {'l_2', 'l_3', 'l_1'}}
+    indexed_paths_to_simplify = {'0': path_data}
+
+    suggested_map = {'l_1': 'SIMP_LINK', 'l_2': 'SIMP_LINK', 'l_3': 'SIMP_LINK'}
+
+    reindexed_paths = simplification.reindex_paths(indexed_paths_to_simplify, suggested_map)
+    assert 'SIMP_LINK' in reindexed_paths
+    assert reindexed_paths['SIMP_LINK'] == path_data
+
+
+def test_reindexing_with_suggested_mapping_when_paths_differ_retains_initial_index():
+    path_data = {
+            'path': ['n_1', 'n_2', 'n_3', 'n_4'],
+            'link_data': {'from': ['n_1', 'n_2', 'n_3'], 'to': ['n_2', 'n_3', 'n_4'], 'freespeed': [1, 1, 1],
+                                 'capacity': [1, 1, 1], 'permlanes': [1, 1, 1], 'length': [1, 1, 1],
+                                 'modes': [{'car'}, {'car'}, {'car'}], 'id': ['l_1', 'l_2', 'l_3']},
+            'node_data': {'n_1': {'x': 1, 'y': 1, 's2_id': 1, 'id': 'n_1'},
+                                 'n_2': {'x': 2, 'y': 2, 's2_id': 2, 'id': 'n_2'},
+                                 'n_3': {'x': 3, 'y': 3, 's2_id': 3, 'id': 'n_3'},
+                                 'n_4': {'x': 4, 'y': 4, 's2_id': 4, 'id': 'n_4'}},
+            'nodes_to_remove': ['n_2', 'n_3'],
+            'ids': {'l_2', 'l_3'}}
+    indexed_paths_to_simplify = {'0': path_data}
+
+    suggested_map = {'l_1': 'SIMP_LINK', 'l_2': 'SIMP_LINK', 'l_3': 'SIMP_LINK'}
+
+    indexed_paths_to_simplify = simplification.reindex_paths(indexed_paths_to_simplify, suggested_map)
+    assert 'SIMP_LINK' not in indexed_paths_to_simplify
+    assert indexed_paths_to_simplify['0'] == path_data
+
+
+def test_suggesting_ids_that_are_more_simplified_fails():
+    indexed_paths_to_simplify = {
+        '0': {'ids': {'l0', 'l1'}},
+        '1': {'ids': {'l2', 'l3'}}
+    }
+    suggested_map = {'l0': 'A', 'l1': 'A', 'l2': 'A', 'l3': 'A'}
+
+    indexed_paths_to_simplify = simplification.reindex_paths(indexed_paths_to_simplify, suggested_map)
+    assert 'A' not in indexed_paths_to_simplify
+    assert indexed_paths_to_simplify == {'0': {'ids': {'l0', 'l1'}}, '1': {'ids': {'l2', 'l3'}}}
+
+
+def test_suggesting_ids_that_are_less_simplified_fails():
+    indexed_paths_to_simplify = {
+        '0': {'ids': {'l0', 'l1', 'l2', 'l3'}}
+    }
+    suggested_map = {'l0': 'A', 'l1': 'A', 'l2': 'B', 'l3': 'B'}
+
+    indexed_paths_to_simplify = simplification.reindex_paths(indexed_paths_to_simplify, suggested_map)
+    assert 'A' not in indexed_paths_to_simplify
+    assert 'B' not in indexed_paths_to_simplify
+    assert indexed_paths_to_simplify == {'0': {'ids': {'l0', 'l1', 'l2', 'l3'}}}
+
+
+def test_suggesting_mish_mash_of_ids_fails():
+    indexed_paths_to_simplify = {
+        '0': {'ids': {'l0', 'l1'}},
+        '1': {'ids': {'l2', 'l3'}}
+    }
+    suggested_map = {'l0': 'A', 'l1': 'B', 'l2': 'A', 'l3': 'A'}
+
+    indexed_paths_to_simplify = simplification.reindex_paths(indexed_paths_to_simplify, suggested_map)
+    assert 'A' not in indexed_paths_to_simplify
+    assert 'B' not in indexed_paths_to_simplify
+    assert indexed_paths_to_simplify == {'0': {'ids': {'l0', 'l1'}}, '1': {'ids': {'l2', 'l3'}}}
+
+
+def test_suggesting_ids_that_are_exactly_as_simplified_works():
+    indexed_paths_to_simplify = {
+        '0': {'ids': {'l0', 'l1'}},
+        '1': {'ids': {'l2', 'l3'}}
+    }
+    suggested_map = {'l0': 'A', 'l1': 'A', 'l2': 'B', 'l3': 'B'}
+
+    indexed_paths_to_simplify = simplification.reindex_paths(indexed_paths_to_simplify, suggested_map)
+    assert 'A' in indexed_paths_to_simplify
+    assert 'B' in indexed_paths_to_simplify
+    assert indexed_paths_to_simplify == {'A': {'ids': {'l0', 'l1'}}, 'B': {'ids': {'l2', 'l3'}}}
+

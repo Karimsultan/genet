@@ -559,6 +559,107 @@ def test_simplifying_network_with_multi_edges_resulting_in_multi_paths():
     assert set(n.link_simplification_map) == {'l_4', 'l_1', 'l_5', 'l_3', 'l_6', 'l_2'}
 
 
+def test_simplification_with_suggested_map_heeds_the_suggestions():
+    n = Network('epsg:27700')
+    n.add_nodes({
+        'n_-1': {'x': -1, 'y': -1, 's2_id': -1},
+        'n_0': {'x': 0, 'y': 0, 's2_id': 0},
+        'n_1': {'x': 1, 'y': 1, 's2_id': 1},
+        'n_2': {'x': 2, 'y': 2, 's2_id': 2},
+        'n_3': {'x': 3, 'y': 3, 's2_id': 3},
+        'n_4': {'x': 4, 'y': 4, 's2_id': 4},
+        'n_5': {'x': 5, 'y': 5, 's2_id': 5},
+        'n_6': {'x': 6, 'y': 5, 's2_id': 6},
+    })
+    n.add_links({
+        'l_-1': {'from': 'n_-1', 'to': 'n_1', 'freespeed': 1, 'capacity': 1, 'permlanes': 1, 'length': 1,
+                 'modes': {'car'}},
+        'l_0': {'from': 'n_0', 'to': 'n_1', 'freespeed': 1, 'capacity': 1, 'permlanes': 1, 'length': 1,
+                'modes': {'car'}},
+        'l_1': {'from': 'n_1', 'to': 'n_2', 'freespeed': 1, 'capacity': 1, 'permlanes': 1, 'length': 1,
+                'modes': {'car'}},
+        'l_2': {'from': 'n_2', 'to': 'n_3', 'freespeed': 1, 'capacity': 1, 'permlanes': 1, 'length': 1,
+                'modes': {'car'}},
+        'l_3': {'from': 'n_3', 'to': 'n_4', 'freespeed': 1, 'capacity': 1, 'permlanes': 1, 'length': 1,
+                'modes': {'car'}},
+        'l_4': {'from': 'n_4', 'to': 'n_5', 'freespeed': 1, 'capacity': 1, 'permlanes': 1, 'length': 1,
+                'modes': {'car'}},
+        'l_5': {'from': 'n_4', 'to': 'n_6', 'freespeed': 1, 'capacity': 1, 'permlanes': 1, 'length': 1,
+                'modes': {'car'}}
+    })
+    failed_suggested_ids = n.simplify(suggested_map={'l_1': 'SIMP_LINK','l_2': 'SIMP_LINK','l_3': 'SIMP_LINK'})
+    assert not failed_suggested_ids
+    assert n.has_link('SIMP_LINK')
+    assert set(n.link('SIMP_LINK')['ids']) == {'l_1', 'l_2', 'l_3'}
+
+
+def test_simplification_with_suggested_map_does_not_affect_which_nodes_get_simplified():
+    n = Network('epsg:27700')
+    n.add_nodes({
+        'n_-1': {'x': -1, 'y': -1, 's2_id': -1},
+        'n_0': {'x': 0, 'y': 0, 's2_id': 0},
+        'n_1': {'x': 1, 'y': 1, 's2_id': 1},
+        'n_2': {'x': 2, 'y': 2, 's2_id': 2},
+        'n_3': {'x': 3, 'y': 3, 's2_id': 3},
+        'n_4': {'x': 4, 'y': 4, 's2_id': 4},
+        'n_5': {'x': 5, 'y': 5, 's2_id': 5},
+        'n_6': {'x': 6, 'y': 5, 's2_id': 6},
+    })
+    n.add_links({
+        'l_-1': {'from': 'n_-1', 'to': 'n_1', 'freespeed': 1, 'capacity': 1, 'permlanes': 1, 'length': 1,
+                 'modes': {'car'}},
+        'l_0': {'from': 'n_0', 'to': 'n_1', 'freespeed': 1, 'capacity': 1, 'permlanes': 1, 'length': 1,
+                'modes': {'car'}},
+        'l_1': {'from': 'n_1', 'to': 'n_2', 'freespeed': 1, 'capacity': 1, 'permlanes': 1, 'length': 1,
+                'modes': {'car'}},
+        'l_2': {'from': 'n_2', 'to': 'n_3', 'freespeed': 1, 'capacity': 1, 'permlanes': 1, 'length': 1,
+                'modes': {'car'}},
+        'l_3': {'from': 'n_3', 'to': 'n_4', 'freespeed': 1, 'capacity': 1, 'permlanes': 1, 'length': 1,
+                'modes': {'car'}},
+        'l_4': {'from': 'n_4', 'to': 'n_5', 'freespeed': 1, 'capacity': 1, 'permlanes': 1, 'length': 1,
+                'modes': {'car'}},
+        'l_5': {'from': 'n_4', 'to': 'n_6', 'freespeed': 1, 'capacity': 1, 'permlanes': 1, 'length': 1,
+                'modes': {'car'}}
+    })
+
+    failed_suggested_ids = n.simplify(suggested_map={'l_1': 'SIMP_LINK_1', 'l_2': 'SIMP_LINK_2', 'l_3': 'SIMP_LINK_1'})
+    assert failed_suggested_ids == {'SIMP_LINK_1', 'SIMP_LINK_2'}
+
+
+def test_simplification_with_suggested_map_does_not_get_confused_when_suggested_ids_are_what_it_usually_creates(mocker):
+    n = Network('epsg:27700')
+    n.add_nodes({
+        'n_-1': {'x': -1, 'y': -1, 's2_id': -1},
+        'n_0': {'x': 0, 'y': 0, 's2_id': 0},
+        'n_1': {'x': 1, 'y': 1, 's2_id': 1},
+        'n_2': {'x': 2, 'y': 2, 's2_id': 2},
+        'n_3': {'x': 3, 'y': 3, 's2_id': 3},
+        'n_4': {'x': 4, 'y': 4, 's2_id': 4},
+        'n_5': {'x': 5, 'y': 5, 's2_id': 5},
+        'n_6': {'x': 6, 'y': 5, 's2_id': 6},
+    })
+    n.add_links({
+        'l_0': {'from': 'n_0', 'to': 'n_1', 'freespeed': 1, 'capacity': 1, 'permlanes': 1, 'length': 1,
+                'modes': {'car'}},
+        'l_1': {'from': 'n_1', 'to': 'n_2', 'freespeed': 1, 'capacity': 1, 'permlanes': 1, 'length': 1,
+                'modes': {'car'}},
+        'l_2': {'from': 'n_2', 'to': 'n_3', 'freespeed': 1, 'capacity': 1, 'permlanes': 1, 'length': 1,
+                'modes': {'car'}},
+        'loop_at_n_3': {'from': 'n_3', 'to': 'n_3', 'freespeed': 1, 'capacity': 1, 'permlanes': 1, 'length': 1,
+                'modes': {'car'}},
+        'l_3': {'from': 'n_3', 'to': 'n_4', 'freespeed': 1, 'capacity': 1, 'permlanes': 1, 'length': 1,
+                'modes': {'car'}},
+        'l_4': {'from': 'n_4', 'to': 'n_5', 'freespeed': 1, 'capacity': 1, 'permlanes': 1, 'length': 1,
+                'modes': {'car'}}
+    })
+    failed_suggested_ids = n.simplify(suggested_map={'l_0': '1', 'l_1': '1', 'l_2': '1', 'l_3': '0', 'l_4': '0'})
+    assert not failed_suggested_ids
+    assert n.has_link('0')
+    assert set(n.link('0')['ids']) == {'l_3', 'l_4'}
+    assert n.has_link('1')
+    assert set(n.link('1')['ids']) == {'l_0', 'l_1', 'l_2'}
+
+
 def test_reading_back_simplified_network():
     # simplified networks have additional geometry attribute and some of their attributes are composite, e.g. links
     # now refer to a number of osm ways each with a unique id

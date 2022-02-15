@@ -133,10 +133,10 @@ def test_generate_osm_graph_edges_from_file(full_fat_default_config):
         5: {'osmid': 400, 'modes': ['walk', 'car', 'bike'], 'highway': 'unclassified'},
         6: {'osmid': 700, 'modes': ['walk', 'car', 'bike'], 'highway': 'unclassified'},
         7: {'osmid': 700, 'modes': ['walk', 'car', 'bike'], 'highway': 'unclassified'},
-        8: {'osmid': 47007861, 'modes': ['car', 'walk', 'bike'], 'highway': 'tertiary', 'lanes': '3'},
-        9: {'osmid': 47007861, 'modes': ['car', 'walk', 'bike'], 'highway': 'tertiary', 'lanes': '3'},
+        8: {'osmid': 47007861, 'modes': ['car', 'walk', 'bike'], 'highway': 'tertiary', 'lanes': '3', 'oneway': 'yes'},
+        9: {'osmid': 47007861, 'modes': ['car', 'walk', 'bike'], 'highway': 'tertiary', 'lanes': '3', 'oneway': 'yes'},
         # funny osm lane data currently defaults to matsim osm values
-        10: {'osmid': 47007862, 'modes': ['car', 'walk', 'bike'], 'highway': 'tertiary', 'lanes': '3;2'}
+        10: {'osmid': 47007862, 'modes': ['car', 'walk', 'bike'], 'highway': 'tertiary', 'lanes': '3;2', 'oneway': 'yes'}
     }
     correct_edges = {0: (0, 1), 1: (1, 0), 2: (0, 2), 3: (2, 0), 4: (1, 0), 5: (0, 1), 6: (2, 0), 7: (0, 2), 8: (2, 1),
                      9: (1, 0), 10: (1, 0)}

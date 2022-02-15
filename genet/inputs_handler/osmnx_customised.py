@@ -108,7 +108,7 @@ def return_edges(paths, config, bidirectional=False):
 
     def extract_osm_data(data, es):
         d = {}
-        for tag in (set(config.USEFUL_TAGS_PATH) | {'osmid', 'modes'}) - {'oneway'}:
+        for tag in (set(config.USEFUL_TAGS_PATH) | {'osmid', 'modes'}):
             if tag in data:
                 d[tag] = data[tag]
         return [(es[i], d) for i in range(len(es))]
@@ -154,10 +154,6 @@ def return_edge(data, one_way):
     # so we don't add it as an attribute to the edge later
     path_nodes = data['nodes']
     del data['nodes']
-
-    # set the oneway attribute to the passed-in value, to make it consistent
-    # True/False values
-    data['oneway'] = one_way
 
     # zip together the path nodes so you get tuples like (0,1), (1,2), (2,3)
     # and so on

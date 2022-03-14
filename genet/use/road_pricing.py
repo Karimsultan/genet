@@ -163,9 +163,10 @@ def build_tree_from_csv_json(csv_input, json_input):
     return build_tree(merge_osm_tolls_and_network_snapping(osm_df, osm_to_network_dict))
 
 
-def build_tree(df_tolls):
+def build_tree(df_tolls, type="cordon", name="cordon-toll"):
     """
     Build XML config for MATSim Road Pricing from tolls DataFrame input
+
     :param df_tolls: pd.DataFrame(
                 columns=[
                     'toll_id',  # optional, unique ID of the toll, based off OSM ref if applicable
@@ -177,10 +178,12 @@ def build_tree(df_tolls):
                     'osm_name',  # optional, if derived from OSM, human readable name of the road
                     'notes'  # optional, user notes
                 ]
+    :param type: valid MATSim RP type "link", "cordon", "distance". Be aware that Hermes mobisim does not support cordon.
+    :param name: name of the RP scheme
     :return: an 'lxml.etree._Element' object
     """
 
-    roadpricing = Element("roadpricing", type="cordon", name="cordon-toll")
+    roadpricing = Element("roadpricing", type=type, name=name)
     description = SubElement(roadpricing, "description")
     description.text = "A simple cordon toll scheme"
 

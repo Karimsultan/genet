@@ -849,8 +849,9 @@ class Network:
             clashing_multi_idxs = \
                 _df[_df['from'].isin(df_clashing_midx['from']) & _df['to'].isin(df_clashing_midx['to'])]['id_to_add']
 
-            df_links.loc[df_links['id'].isin(clashing_multi_idxs)] = df_links[
-                df_links['id'].isin(clashing_multi_idxs)].groupby(['from', 'to']).apply(generate_unique_multi_idx)
+            if not clashing_multi_idxs.empty:
+                df_links.loc[df_links['id'].isin(clashing_multi_idxs)] = df_links[
+                    df_links['id'].isin(clashing_multi_idxs)].groupby(['from', 'to']).apply(generate_unique_multi_idx)
 
             # generate unique indices if not
             clashing_link_ids = set(self.link_id_mapping.keys()) & set(links_and_attributes.keys())

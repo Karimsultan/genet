@@ -241,7 +241,7 @@ def approximate_metres_distance_in_4326_degrees(distance, lat):
 class SpatialTree(nx.DiGraph):
     def __init__(self, n=None):
         super().__init__()
-        self.links = gpd.GeoDataFrame(columns={'link_id', 'modes', 'geometry'})
+        self.links = gpd.GeoDataFrame(columns=['link_id', 'modes', 'geometry'])
         if n is not None:
             self.add_links(n)
 

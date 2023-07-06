@@ -18,3 +18,4 @@ RUN pip3 install --no-cache-dir --compile -e . && pip cache purge
 ENV PYTHONPATH=./scripts:${PYTHONPATH}
 
 ENTRYPOINT ["python3"]
+
